@@ -3,10 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import EventCard from './components/eventCard';
 import { BetEvent, getOpenBetEvents } from '../web3/web3Functions';
+import { useAccount } from './contexts/AccountContext';
+import { CircularProgress } from '@mui/material';
 
 const EventListPage: React.FC = () => {
   const [events, setEvents] = useState<BetEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const {account, setAccount} = useAccount();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -23,21 +26,26 @@ const EventListPage: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </div>
+    );
   }
 
   return (
     <div className="event-list-page">
-      {events.map((event, index) => (
+      {events.map((event, key) => (
         <EventCard
-          key={index}
+          key={key}
+          eventId={event.eventId}
           name1={event.name1}
           name2={event.name2}
           bet1={event.bets1}
           bet2={event.bets2}
           endTime={event.endTime}
-          onBet={() => console.log('Bet clicked')}
-          onEnd={() => console.log('End clicked')}
+          account={account.account}
+          open={event.open}
         />
       ))}
     </div>

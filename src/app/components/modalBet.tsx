@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Box, TextField, Button, Checkbox, FormControlLabel } from '@mui/material';
+import { placeBet } from '../../web3/web3Functions'; // Importe a função placeBet
+import { useAccount } from '../contexts/AccountContext';
 
 interface ModalBetProps {
     open: boolean;
     handleClose: () => void;
     name1: string;
     name2: string;
+    eventId: bigint; // Adicione eventId como prop
+    account: string; // Adicione account como prop
 }
 
-const ModalBet: React.FC<ModalBetProps> = ({ open, handleClose, name1, name2 }) => {
+const ModalBet: React.FC<ModalBetProps> = ({ open, handleClose, name1, name2, eventId, account}) => {
     const [name1Checked, setName1Checked] = useState(false);
     const [name2Checked, setName2Checked] = useState(false);
     const [value, setValue] = useState('');
@@ -25,7 +29,7 @@ const ModalBet: React.FC<ModalBetProps> = ({ open, handleClose, name1, name2 }) 
         }
     }, [open]);
 
-    const handleBet = () => {
+    const handleBet = async () => {
         if (!name1Checked && !name2Checked) {
             setError('Você deve selecionar pelo menos um nome.');
             setSuccess('');
@@ -38,12 +42,25 @@ const ModalBet: React.FC<ModalBetProps> = ({ open, handleClose, name1, name2 }) 
             return;
         }
 
-        // Lógica para processar a aposta
-        setSuccess('Aposta realizada com sucesso!');
-        setError('');
-        setName1Checked(false);
-        setName2Checked(false);
-        setValue('');
+        const betOn = name1Checked ? true : false;
+
+        try {
+            console.log(account)
+            const result = await placeBet(account, eventId, value, betOn);
+            if (result instanceof Error) {
+                setError(result.message);
+                setSuccess('');
+            } else {
+                setSuccess(result.message);
+                setError('');
+                setName1Checked(false);
+                setName2Checked(false);
+                setValue('');
+            }
+        } catch (error) {
+            setError('Erro ao realizar a aposta.');
+            setSuccess('');
+        }
     };
 
     const handleName1Change = (checked: boolean) => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Box, TextField, Button } from '@mui/material';
 import { createBetEvent } from '../../web3/web3Functions'; // Importe a função aqui
+import { useAccount } from '../contexts/AccountContext';
 
 interface ModalEventProps {
     open: boolean;
@@ -13,6 +14,7 @@ const ModalEvent: React.FC<ModalEventProps> = ({ open, handleClose }) => {
     const [date, setDate] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const {account, setAccount} = useAccount();
 
     const handleCreate = async () => {
         if (!name1 || !name2 || !date) {
@@ -23,7 +25,7 @@ const ModalEvent: React.FC<ModalEventProps> = ({ open, handleClose }) => {
 
         try {
             const endTime = new Date(date).getTime() / 1000; // Convertendo a data para timestamp Unix
-            const result = await createBetEvent("0xBD6f33F0E3f021354b13a38C68C9fe649C9f94B5", name1, name2, endTime);
+            const result = await createBetEvent(account.account, name1, name2, endTime);
             if (result instanceof Error) {
                 setError(result.message);
                 setSuccess(''); // Limpa a mensagem de sucesso

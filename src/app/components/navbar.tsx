@@ -19,8 +19,10 @@ const Navbar = () => {
     useEffect(() => {
         const fetchAccounts = async () => {
             const accounts = await getAccounts();
+
             if (!(accounts instanceof Error)) {
                 setAccounts(accounts);
+                handleSelectAccount(accounts[0]);
             }
         };
         fetchAccounts();
@@ -74,7 +76,7 @@ const Navbar = () => {
                         <Button color="inherit" >Meus Eventos</Button>
                     </Link>
                 </Box>
-                <Button color="inherit" onClick={handleOpenModal} className="mr-4">Criar Evento</Button>
+                <Button color="inherit" onClick={handleOpenModal} className="mr-3">Criar Evento</Button>
                 <Typography>
                     Saldo: {account.balance} ETH
                 </Typography>

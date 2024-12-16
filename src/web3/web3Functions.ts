@@ -14,20 +14,75 @@ export interface BetEvent {
     eventId: bigint;
     name1: string;
     name2: string;
-    bets1: bigint;
-    bets2: bigint;
+    bets1: string;
+    bets2: string;
     endTime: string;
     open: boolean;
     result: boolean;
     betCreator: string;
 }
 
-export async function createBetEvent(account: string, name1: string, name2: string, endTime: number) : Promise<{ message: string } | Error> {
+export interface Bet {
+    name1: string;
+    name2: string;
+    open: boolean;
+    result: boolean;
+    choice: boolean;
+    value: string;
+}
+
+interface ContractExecutionError extends Error {
+    cause?: {
+        message: string;
+    };
+    code?: number;
+}
+
+function handleError(error: unknown): string {
+    if (error instanceof Error) {
+        const contractError = error as ContractExecutionError;
+        const messageError = contractError.cause?.message;
+        if (messageError) {
+            if (messageError.includes('insufficient funds for gas * price + value')) {
+                return 'Saldo insuficiente';
+            }
+            const revertMessageMatch = messageError.match(/revert (.*)/);
+            if (revertMessageMatch) {
+                return revertMessageMatch[1];
+            }
+        }
+    }
+    return 'Erro desconhecido';
+}
+
+export async function closeBetEvent(account: string, eventId: bigint): Promise<{ message: string } | Error> {
     try {
-        await betManager.methods.createBetEvent(name1, name2, endTime).send({ from: account, gas : "1299999" });
-        return {message : 'Evento de aposta criado com sucesso'};
-    } catch (error) {
-        return {message : 'Erro ao criar o evento'};
+        await betManager.methods.closeBetEvent(eventId).send({ from: account, gas: "1299999" });
+        return { message: 'Evento de aposta encerrado com sucesso' };
+    } catch (error: unknown) {
+        const errorHandled = handleError(error);
+        return new Error(errorHandled);
+    }
+}
+
+export async function placeBet(account: string, eventId: bigint, amount: string, betOn: boolean): Promise<{ message: string } | Error> {
+    try {
+        const amountInWei = web3.utils.toWei(amount, 'ether');
+        await betManager.methods.placeBet(eventId, betOn).send({ from: account, value: amountInWei, gas: "1299999" });
+        return { message: 'Aposta realizada com sucesso' };
+    } catch (error: unknown) {
+        const errorHandled = handleError(error);
+        return new Error(errorHandled);
+    }
+}
+
+export async function createBetEvent(account: string, name1: string, name2: string, endTime: number): Promise<{ message: string } | Error> {
+    try {
+        await betManager.methods.createBetEvent(name1, name2, endTime).send({ from: account, gas: "1299999" });
+        return { message: 'Evento de aposta criado com sucesso' };
+    } catch (error: unknown) {
+        const errorHandled = handleError(error);
+        return new Error(errorHandled);
     }
 }
 
@@ -35,8 +90,9 @@ export async function getAccountBalance(account: string): Promise<string | Error
     try {
         const balance = await web3.eth.getBalance(account);
         return web3.utils.fromWei(balance, 'ether');
-    } catch (error) {
-        return new Error('Erro ao obter saldo da conta');
+    } catch (error: unknown) {
+        const errorHandled = handleError(error);
+        return new Error(errorHandled);
     }
 }
 
@@ -44,8 +100,9 @@ export async function getAccounts(): Promise<string[] | Error> {
     try {
         const accounts = await web3.eth.getAccounts();
         return accounts;
-    } catch (error) {
-        return new Error('Erro ao obter contas');
+    } catch (error: unknown) {
+        const errorHandled = handleError(error);
+        return new Error(errorHandled);
     }
 }
 
@@ -55,8 +112,8 @@ export async function convertEventsToData(events: void | [] | (unknown[] & [])) 
         eventId: web3.utils.toBigInt(event.eventId),
         name1: event.name1,
         name2: event.name2,
-        bets1: BigInt(web3.utils.fromWei(event.bets1, 'ether')), 
-        bets2: BigInt(web3.utils.fromWei(event.bets2, 'ether')), 
+        bets1: web3.utils.fromWei(event.bets1, 'ether'), 
+        bets2: web3.utils.fromWei(event.bets2, 'ether'), 
         endTime: new Date(Number(web3.utils.toBigInt(event.endTime).toString()) * 1000).toISOString().split('T')[0],
         open: event.open,
         result: event.result,
@@ -65,20 +122,44 @@ export async function convertEventsToData(events: void | [] | (unknown[] & [])) 
     return eventsTransfomed
 }
 
+export async function convertBetsToData(bets: void | [] | (unknown[] & [])) {
+    const betsData = bets as Bet[]
+    const betsTransfomed: Bet[] = betsData.map((bet) => ({
+        name1: bet.name1,
+        name2: bet.name2,
+        open: bet.open,
+        result: bet.result,
+        choice: bet.choice,
+        value: web3.utils.fromWei(bet.value, 'ether')
+    }));    
+    return betsTransfomed
+}
+
+export async function getUserBets(account:string): Promise<Bet[] | Error> {
+    try {
+        const bets = await betManager.methods.getUserBets(account).call();
+        const betsTransfomed = convertBetsToData(bets)
+        if (!bets || bets.length === 0) {
+            return new Error('Nenhuma aposta encontrada');
+        }
+        return betsTransfomed;
+    } catch (error: unknown) {
+        const errorHandled = handleError(error);
+        return new Error(errorHandled);
+    }
+}
+
 export async function getOpenBetEvents(): Promise<BetEvent[] | Error> {
     try {
         const events = await betManager.methods.getOpenBetEvents().call();
         const eventsTransfomed = convertEventsToData(events)
         if (!events || events.length === 0) {
-            throw new Error('Nenhum evento aberto encontrado');
+            return new Error('Nenhum evento aberto encontrado');
         }
         return eventsTransfomed;
-    } catch (error: any) {
-        if (error instanceof Error) {
-            return new Error(error.message);
-        } else {
-            return new Error('Erro desconhecido');
-        }
+    } catch (error: unknown) {
+        const errorHandled = handleError(error);
+        return new Error(errorHandled);
     }
 }
 
@@ -87,14 +168,11 @@ export async function getBetEventsByCreator(account: string): Promise<any[] | Er
         const events = await betManager.methods.getBetsByCreator(account).call()
         const eventsTransfomed = convertEventsToData(events)
         if (!events || events.length === 0) {
-            throw new Error('Nenhum evento encontrado para o usuário');
+            return new Error('Nenhum evento encontrado para o usuário');
         }
         return eventsTransfomed;
-    } catch (error: any) {
-        if (error instanceof Error) {
-            return new Error(error.message);
-        } else {
-            return new Error('Erro desconhecido');
-        }
+    } catch (error: unknown) {
+        const errorHandled = handleError(error);
+        return new Error(errorHandled);
     }
 }

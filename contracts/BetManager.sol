@@ -8,6 +8,15 @@ contract BetManager {
         uint256 value;
     }
 
+    struct BetView {
+        string name1;
+        string name2;
+        bool open;
+        bool result;
+        bool choice;
+        uint256 value;
+    }
+
     struct BetEvent {
         uint256 eventId;
         string name1;
@@ -48,7 +57,6 @@ contract BetManager {
     function placeBet(uint256 _betEventId, bool _choice) public payable {
         require(_betEventId < betEvents.length, "BetEvent does not exist");
         require(betEvents[_betEventId].open, "BetEvent is closed");
-        require(block.timestamp < betEvents[_betEventId].endTime, "Betting time has ended");
         require(msg.value > 0, "Bet value must be greater than 0");
 
         Bet memory newBet = Bet({
@@ -96,17 +104,7 @@ contract BetManager {
         payable(betEvents[_betEventId].betCreator).transfer(commission);
     }
 
-    function getBetEventById(uint256 _betEventId) public view returns (BetEvent memory) {
-        require(_betEventId < betEvents.length, "BetEvent does not exist");
-        return betEvents[_betEventId];
-    }
-
-    function getBets(uint256 _betEventId) public view returns (Bet[] memory) {
-        require(_betEventId < betEvents.length, "BetEvent does not exist");
-        return bets[_betEventId];
-    }
-
-    function getUserBets(address _user) public view returns (Bet[] memory) {
+    function getUserBets(address _user) public view returns (BetView[] memory) {
         uint256 count = 0;
         for (uint256 i = 0; i < betEvents.length; i++) {
             for (uint256 j = 0; j < bets[i].length; j++) {
@@ -116,12 +114,19 @@ contract BetManager {
             }
         }
 
-        Bet[] memory userBets = new Bet[](count);
+        BetView[] memory userBets = new BetView[](count);
         uint256 index = 0;
         for (uint256 i = 0; i < betEvents.length; i++) {
             for (uint256 j = 0; j < bets[i].length; j++) {
                 if (bets[i][j].bettor == _user) {
-                    userBets[index] = bets[i][j];
+                    userBets[index] = BetView({
+                        name1: betEvents[i].name1,
+                        name2: betEvents[i].name2,
+                        open: betEvents[i].open,
+                        result: betEvents[i].result,
+                        choice: bets[i][j].choice,
+                        value: bets[i][j].value
+                    });
                     index++;
                 }
             }
