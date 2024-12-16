@@ -1,5 +1,6 @@
 import "./globals.css";
 import Navbar from "./components/navbar";
+import { AccountProvider } from "./contexts/AccountContext";
 
 export default function RootLayout({
   children,
@@ -9,8 +10,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navbar balance={0} />
-        {children}
+        <AccountProvider>
+          <Navbar/>
+            {children}
+        </AccountProvider>
       </body>
     </html>
   );

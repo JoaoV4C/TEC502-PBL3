@@ -5,16 +5,16 @@ import React, { useState, useEffect } from 'react';
 import ModalEvent from './modalEvent';
 import { AccountCircle } from '@mui/icons-material';
 import { MenuItem } from '@mui/material';
-import { getAccounts } from '../../web3/web3Functions'; // ajuste o caminho conforme necessário
+import { getAccountBalance, getAccounts } from '../../web3/web3Functions'; // ajuste o caminho conforme necessário
+import { useAccount } from '../contexts/AccountContext';
+import Link from 'next/link';
 
-interface NavbarProps {
-    balance: number;
-}
 
-const Navbar: React.FC<NavbarProps> = ({ balance = 0 }) => {
+const Navbar = () => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [openModal, setOpenModal] = useState(false);
     const [accounts, setAccounts] = useState<string[]>([]);
+    const {account ,setAccount} = useAccount()
 
     useEffect(() => {
         const fetchAccounts = async () => {
@@ -42,17 +42,41 @@ const Navbar: React.FC<NavbarProps> = ({ balance = 0 }) => {
         setOpenModal(false);
     };
 
+    const handleSelectAccount = (account: string) => {
+        console.log("PASSEI AQUI")
+        getAccountBalance(account).then(balance => {
+            if (balance instanceof Error) {
+                setAccount({
+                    account: account,
+                    balance: '0'
+                })
+            } else {
+                setAccount({
+                    account: account,
+                    balance: balance
+                })
+            }
+        });
+        handleClose()
+    }
+
     return (
         <AppBar position="static">
             <Toolbar>
                 <Box display="flex" flexGrow={1}>
-                    <Button color="inherit" href='/'>Home</Button>
-                    <Button color="inherit" href='/my-bets'>Minhas Apostas</Button>
-                    <Button color="inherit" href='/my-events'>Meus Eventos</Button>
+                    <Link href='/'>
+                        <Button color="inherit" >Home</Button>
+                    </Link>
+                    <Link href='/my-bets'>
+                        <Button color="inherit" >Minhas Apostas</Button>
+                    </Link>
+                    <Link href='/my-events'>
+                        <Button color="inherit" >Meus Eventos</Button>
+                    </Link>
                 </Box>
                 <Button color="inherit" onClick={handleOpenModal} className="mr-4">Criar Evento</Button>
                 <Typography>
-                    Saldo: {balance.toFixed(2)} ETH
+                    Saldo: {account.balance} ETH
                 </Typography>
 
                 <div>
@@ -82,7 +106,7 @@ const Navbar: React.FC<NavbarProps> = ({ balance = 0 }) => {
                         onClose={handleClose}
                     >
                         {accounts.map((account, index) => (
-                            <MenuItem key={index} onClick={handleClose}>Account {index} - {account}</MenuItem>
+                            <MenuItem key={index} onClick={() => handleSelectAccount(account)}>Account {index} - {account}</MenuItem>
                         ))}
                     </Menu>
                 </div>
