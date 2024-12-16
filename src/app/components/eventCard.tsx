@@ -6,8 +6,8 @@ import ModalBet from './modalBet';
 interface EventCardProps {
     name1: string;
     name2: string;
-    bet1: number;
-    bet2: number;
+    bet1: bigint;
+    bet2: bigint;
     endTime: string;
     onBet: () => void;
     onEnd: () => void;
