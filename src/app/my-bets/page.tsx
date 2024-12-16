@@ -16,6 +16,7 @@ export default function MyEvents() {
       const fetchBets = async () => {
         const userBets = await getUserBets(account.account);
         if (userBets instanceof Error) {
+          setBets([]);
         } else {
             setBets(userBets);
         } 
