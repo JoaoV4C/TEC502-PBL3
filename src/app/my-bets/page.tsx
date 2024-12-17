@@ -37,6 +37,7 @@ export default function MyEvents() {
 
   return (
       <div className="grid grid-cols-1 gap-4">
+        <h1 className="text-center text-2xl my-4">Minhas Apostas</h1>
           {bets.map((bet, index) => (
               <BetCard key={index} bet={bet} />
           ))}

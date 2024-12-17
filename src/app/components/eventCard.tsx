@@ -29,18 +29,13 @@ const EventCard: React.FC<EventCardProps> = ({ eventId, name1, name2, bet1, bet2
 
     const handleEndEvent = async () => {
         setLoading(true);
-        try {
-            const response = await closeBetEvent(account, eventId);
-            if (response instanceof Error) {
-                alert(`Erro: ${response.message}`);
-            } else {
-                alert(response.message);
-            }
-        } catch (error) {
-            alert('Erro ao encerrar o evento de aposta');
-        } finally {
-            setLoading(false);
+        const response = await closeBetEvent(account, eventId);
+        if (response instanceof Error) {
+            alert(`Erro: ${response.message}`);
+        } else {
+            alert(response.message);
         }
+        setLoading(false);
     };
 
     return (

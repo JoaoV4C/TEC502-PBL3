@@ -45,7 +45,6 @@ const Navbar = () => {
     };
 
     const handleSelectAccount = (account: string) => {
-        console.log("PASSEI AQUI")
         getAccountBalance(account).then(balance => {
             if (balance instanceof Error) {
                 setAccount({
@@ -77,9 +76,13 @@ const Navbar = () => {
                     </Link>
                 </Box>
                 <Button color="inherit" onClick={handleOpenModal} className="mr-3">Criar Evento</Button>
-                <Typography>
-                    Saldo: {account.balance} ETH
-                </Typography>
+                {account.account && (
+                    <><Typography>
+                        Account {accounts.findIndex(acc => acc === account.account)} - {account.account.slice(0, 10)}...
+                    </Typography><Typography className='ml-3'>
+                            Saldo: {account.balance.slice(0, 10)}... ETH
+                        </Typography></>
+                )}
 
                 <div>
                     <IconButton
@@ -107,8 +110,9 @@ const Navbar = () => {
                         open={Boolean(anchorEl)}
                         onClose={handleClose}
                     >
-                        {accounts.map((account, index) => (
-                            <MenuItem key={index} onClick={() => handleSelectAccount(account)}>Account {index} - {account}</MenuItem>
+
+                        {accounts.length > 0 && accounts.map((account, index) => (
+                            <MenuItem key={index} onClick={() => handleSelectAccount(account)}>Account {index} - {account.slice(0,10)}...</MenuItem>
                         ))}
                     </Menu>
                 </div>

@@ -23,7 +23,7 @@ const BetCard: React.FC<BetCardProps> = ({bet}) => {
                     Aposta: {bet.value} ETH
                 </Typography>
                 <Typography color="textSecondary">
-                    Escolha: {bet.choice ? bet.name1 : bet.name2}
+                    Escolha: {bet.choice ? bet.name2 : bet.name1}
                 </Typography>
                 <Typography color="textSecondary">
                     Status: {bet.open ? 'Aberto' : 'Fechado'}

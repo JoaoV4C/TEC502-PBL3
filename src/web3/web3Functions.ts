@@ -39,6 +39,7 @@ interface ContractExecutionError extends Error {
 }
 
 function handleError(error: unknown): string {
+    console.log(error);
     if (error instanceof Error) {
         const contractError = error as ContractExecutionError;
         const messageError = contractError.cause?.message;

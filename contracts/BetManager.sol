@@ -68,9 +68,9 @@ contract BetManager {
         bets[_betEventId].push(newBet);
 
         if (_choice) {
-            betEvents[_betEventId].bets1 += msg.value;
-        } else {
             betEvents[_betEventId].bets2 += msg.value;
+        } else {
+            betEvents[_betEventId].bets1 += msg.value;
         }
     }
 
@@ -83,21 +83,23 @@ contract BetManager {
         betEvents[_betEventId].open = false;
         betEvents[_betEventId].result = betEvents[_betEventId].bets2 > betEvents[_betEventId].bets1;
 
+        uint256 precisionValue = 1e18;
         uint256 totalBets = betEvents[_betEventId].bets1 + betEvents[_betEventId].bets2;
-        uint256 winnerTotalBets = betEvents[_betEventId].result ? betEvents[_betEventId].bets2 : betEvents[_betEventId].bets1;
-        uint256 commission = (totalBets * 5) / 100;
+        uint256 winnerBets = betEvents[_betEventId].result ? betEvents[_betEventId].bets2 : betEvents[_betEventId].bets1;
+        uint256 commission = (totalBets * 10) / 100;
         uint256 payoutPool = totalBets - commission;
+        uint256 odd = (payoutPool * precisionValue) / winnerBets;
 
-        if (winnerTotalBets > 0) {
+        if (betEvents[_betEventId].bets1 == 0 || betEvents[_betEventId].bets2 == 0) {
             for (uint256 i = 0; i < bets[_betEventId].length; i++) {
-                if (bets[_betEventId][i].choice == betEvents[_betEventId].result) {
-                    uint256 payout = (bets[_betEventId][i].value * payoutPool) / winnerTotalBets;
-                    payable(bets[_betEventId][i].bettor).transfer(payout);
-                }
+                payable(bets[_betEventId][i].bettor).transfer(bets[_betEventId][i].value);
             }
         } else {
             for (uint256 i = 0; i < bets[_betEventId].length; i++) {
-                payable(bets[_betEventId][i].bettor).transfer(bets[_betEventId][i].value);
+                if (bets[_betEventId][i].choice == betEvents[_betEventId].result) {
+                    uint256 payout = bets[_betEventId][i].value * odd / precisionValue;
+                    payable(bets[_betEventId][i].bettor).transfer(payout);
+                }
             }
         }
 

@@ -35,6 +35,7 @@ const EventListPage: React.FC = () => {
 
   return (
     <div className="event-list-page">
+      <h1 className="text-center text-2xl my-4">Apostas Abertas</h1>
       {events.map((event, key) => (
         <EventCard
           key={key}

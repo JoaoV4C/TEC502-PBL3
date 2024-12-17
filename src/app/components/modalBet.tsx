@@ -42,7 +42,7 @@ const ModalBet: React.FC<ModalBetProps> = ({ open, handleClose, name1, name2, ev
             return;
         }
 
-        const betOn = name1Checked ? true : false;
+        const betOn = name1Checked ? false : true;
 
         try {
             console.log(account)
